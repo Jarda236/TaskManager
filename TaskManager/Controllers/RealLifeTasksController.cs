@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -10,6 +12,7 @@ using TaskManager.Models;
 
 namespace TaskManager.Controllers
 {
+    [Authorize]
     public class RealLifeTasksController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -22,7 +25,19 @@ namespace TaskManager.Controllers
         // GET: RealLifeTasks
         public async Task<IActionResult> Index()
         {
-            return View(await _context.RealLifeTask.ToListAsync());
+            var userID = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (userID == null)
+            {
+                return NotFound();
+            }
+            
+
+            var tasks = await _context.RealLifeTask
+                .Where(t => t.UserId == userID)
+                .ToListAsync();
+
+            return View(tasks);
         }
 
         // GET: RealLifeTasks/Details/5
@@ -56,6 +71,16 @@ namespace TaskManager.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Name,Description,Category,IsCompleted,CreatedAt,Deadline,CompletedAt")] RealLifeTask realLifeTask)
         {
+            realLifeTask.CreatedAt = DateTime.Now;
+            var userID = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (userID == null)
+            {
+                return NotFound();
+            }
+
+            realLifeTask.UserId = userID;
+
             if (ModelState.IsValid)
             {
                 _context.Add(realLifeTask);
@@ -116,6 +141,24 @@ namespace TaskManager.Controllers
             return View(realLifeTask);
         }
 
+        // GET: RealLifeTasks/Complete/5
+        public async Task<IActionResult> Complete(int id)
+        {
+            var realLifeTask = await _context.RealLifeTask.FindAsync(id);
+            if (realLifeTask == null)
+            {
+                return NotFound();
+            }
+
+            realLifeTask.IsCompleted = true;
+            realLifeTask.CompletedAt = DateTime.Now;
+
+            _context.Update(realLifeTask);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Index));
+        }
+
         // GET: RealLifeTasks/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
@@ -148,6 +191,8 @@ namespace TaskManager.Controllers
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
+
+
 
         private bool RealLifeTaskExists(int id)
         {

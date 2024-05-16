@@ -9,6 +9,12 @@
 <p>
     If you do not see any of your task, just <a asp-action="Create">create new</a>.
 </p>
+<p>
+    <b>Warnings!</b>:
+    <ul>
+        <li>Once completed task can not be changed to uncomplete.</li>
+    </ul>
+</p>
 <table class="table">
     <thead>
         <tr>
@@ -46,7 +52,10 @@
                 <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
                 <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
                 <a asp-action="Delete" asp-route-id="@item.Id">Delete</a> |
-                <a asp-action="Complete" asp-route-id="@item.Id">Complete</a>
+                @if (!item.IsCompleted)
+{
+                    <a asp-action="Complete" asp-route-id="@item.Id">Complete</a>
+                }
             </td>
         </tr>
 }
