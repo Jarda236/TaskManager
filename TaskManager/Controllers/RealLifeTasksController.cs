@@ -111,12 +111,21 @@ namespace TaskManager.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Description,Category,IsCompleted,CreatedAt,Deadline,CompletedAt")] RealLifeTask realLifeTask)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,UserId,Name,Description,Category,IsCompleted,CreatedAt,Deadline,CompletedAt")] RealLifeTask realLifeTask)
         {
             if (id != realLifeTask.Id)
             {
                 return NotFound();
             }
+
+            var userID = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (userID == null)
+            {
+                return NotFound();
+            }
+
+            realLifeTask.UserId = userID;
 
             if (ModelState.IsValid)
             {
