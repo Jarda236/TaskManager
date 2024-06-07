@@ -11,6 +11,7 @@ using TaskManager.Data;
 using TaskManager.Extensions;
 using TaskManager.Interfaces.Repositories;
 using TaskManager.Models;
+using TaskManager.ViewModels;
 
 namespace TaskManager.Controllers
 {
@@ -26,6 +27,7 @@ namespace TaskManager.Controllers
             _categoryRepository = categoryRepository;
         }
 
+        /*
         // GET: RealLifeTasks
         public async Task<IActionResult> Index()
         {
@@ -40,6 +42,48 @@ namespace TaskManager.Controllers
             var tasks = await _realLifeTaskRepository.GetAllUserTasksAsync();
 
             return View(tasks);
+        }
+        */
+
+        // GET: RealLifeTasks
+        public async Task<IActionResult> Index(int? categoryId, Priority? priority, bool? isCompleted)
+        {
+            var userID = User.GetId();
+
+            if (userID == null)
+            {
+                return NotFound();
+            }
+
+            var categories = await _categoryRepository.GetAllUserCategoriesAsync();
+            ViewBag.Categories = categories;
+
+            var tasks = await _realLifeTaskRepository.GetAllUserTasksAsync();
+
+            if (categoryId.HasValue)
+            {
+                tasks = tasks.Where(t => t.CategoryId == categoryId.Value).ToList();
+            }
+
+            if (priority.HasValue)
+            {
+                tasks = tasks.Where(t => t.Priority == priority.Value).ToList();
+            }
+
+            if (isCompleted.HasValue)
+            {
+                tasks = tasks.Where(t => t.IsCompleted == isCompleted.Value).ToList();
+            }
+
+            var viewModel = new RealLifeTaskFilterViewModel
+            {
+                Tasks = tasks,
+                CategoryId = categoryId,
+                Priority = priority,
+                IsCompleted = isCompleted,
+            };
+
+            return View(viewModel);
         }
 
         // GET: RealLifeTasks/Details/5

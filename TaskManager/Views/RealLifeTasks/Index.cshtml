@@ -1,11 +1,10 @@
-﻿@model IEnumerable<TaskManager.Models.RealLifeTask>
+﻿@model TaskManager.ViewModels.RealLifeTaskFilterViewModel
 
 @{
     ViewData["Title"] = "Index";
 }
 
 <h1>Your tasks:</h1>
-
 <p>
     If you do not see any of your task, just <a asp-action="Create">create new</a>.
 </p>
@@ -15,49 +14,83 @@
         <li>Once completed task can not be changed to uncomplete.</li>
     </ul>
 </p>
+<form method="get" asp-action="Index">
+    <div>
+        <label for="categoryId">Category:</label>
+        <select id="categoryId" name="categoryId">
+            <option value="">-- Select Category --</option>
+            @foreach (var category in (IEnumerable<TaskManager.Models.Category>)ViewBag.Categories)
+            {
+                <option value="@category.Id">@category.Name</option>
+            }
+        </select>
+    </div>
+    <div>
+        <label for="priority">Priority:</label>
+        <select id="priority" name="priority">
+            <option value="">-- Select Priority --</option>
+            @foreach (var priority in Enum.GetValues(typeof(TaskManager.Models.Priority)).Cast<TaskManager.Models.Priority>())
+            {
+                <option value="@((int)priority)">@priority</option>
+            }
+        </select>
+    </div>
+    <div>
+        <label for="isCompleted">Completed:</label>
+        <select id="isCompleted" name="isCompleted">
+            <option value="">-- Select Status --</option>
+            <option value="true">Completed</option>
+            <option value="false">Not Completed</option>
+        </select>
+    </div>
+    <button type="submit">Filter</button>
+</form>
+<hr />
+
 <table class="table">
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.Name)
+                @Html.DisplayNameFor(model => model.Tasks.FirstOrDefault().Name)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Category)
+                @Html.DisplayNameFor(model => model.Tasks.FirstOrDefault().Category.Name)
             </th>
             <th>
                 Completed
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Deadline)
+                @Html.DisplayNameFor(model => model.Tasks.FirstOrDefault().Deadline)
             </th>
             <th></th>
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Name)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Category.Name)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.IsCompleted)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Deadline)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a> |
-                @if (!item.IsCompleted)
-{
-                    <a asp-action="Complete" asp-route-id="@item.Id">Complete</a>
-                }
-            </td>
-        </tr>
-}
+        @foreach (var item in Model.Tasks)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Name)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Category.Name)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.IsCompleted)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Deadline)
+                </td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
+                    <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
+                    <a asp-action="Delete" asp-route-id="@item.Id">Delete</a> |
+                    @if (!item.IsCompleted)
+                    {
+                        <a asp-action="Complete" asp-route-id="@item.Id">Complete</a>
+                    }
+                </td>
+            </tr>
+        }
     </tbody>
 </table>
