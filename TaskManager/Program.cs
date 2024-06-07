@@ -1,6 +1,10 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using TaskManager.Data;
+using TaskManager.Interfaces.Repositories;
+using TaskManager.Interfaces.Services;
+using TaskManager.Repositories;
+using TaskManager.Services;
 
 namespace TaskManager
 {
@@ -19,6 +23,12 @@ namespace TaskManager
             builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
                 .AddEntityFrameworkStores<ApplicationDbContext>();
             builder.Services.AddControllersWithViews();
+
+            builder.Services.AddHttpContextAccessor();
+            builder.Services.AddTransient<IUserService, UserService>();
+
+            builder.Services.AddScoped<IRealLifeTaskRepository, RealLifeTaskRepository>();
+            builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 
             var app = builder.Build();
 

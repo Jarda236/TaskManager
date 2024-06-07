@@ -10,6 +10,18 @@ namespace TaskManager.Data
             : base(options)
         {
         }
-        public DbSet<TaskManager.Models.RealLifeTask> RealLifeTask { get; set; } = default!;
+        public DbSet<RealLifeTask> RealLifeTask { get; set; } = default!;
+        public DbSet<Category> Category { get; set; } = default!;
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<RealLifeTask>()
+                .HasOne(rl => rl.Category)
+                .WithMany(c => c.RealLifeTasks)
+                .HasForeignKey(rl => rl.CategoryId)
+                .OnDelete(DeleteBehavior.Restrict); // Use Restrict or NoAction to prevent cascading deletes
+
+            base.OnModelCreating(modelBuilder);
+        }
     }
 }

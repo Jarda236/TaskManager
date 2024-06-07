@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using TaskManager.Data;
+using TaskManager.Extensions;
+using TaskManager.Interfaces.Repositories;
 using TaskManager.Models;
 
 namespace TaskManager.Controllers
@@ -15,27 +17,27 @@ namespace TaskManager.Controllers
     [Authorize]
     public class RealLifeTasksController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IRealLifeTaskRepository _realLifeTaskRepository;
+        private readonly ICategoryRepository _categoryRepository;
 
-        public RealLifeTasksController(ApplicationDbContext context)
+        public RealLifeTasksController(IRealLifeTaskRepository realLifeTaskRepository, ICategoryRepository categoryRepository)
         {
-            _context = context;
+            _realLifeTaskRepository = realLifeTaskRepository;
+            _categoryRepository = categoryRepository;
         }
 
         // GET: RealLifeTasks
         public async Task<IActionResult> Index()
         {
-            var userID = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userID = User.GetId();
 
             if (userID == null)
             {
                 return NotFound();
             }
-            
 
-            var tasks = await _context.RealLifeTask
-                .Where(t => t.UserId == userID)
-                .ToListAsync();
+
+            var tasks = await _realLifeTaskRepository.GetAllUserTasksAsync();
 
             return View(tasks);
         }
@@ -48,8 +50,8 @@ namespace TaskManager.Controllers
                 return NotFound();
             }
 
-            var realLifeTask = await _context.RealLifeTask
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var realLifeTask = await _realLifeTaskRepository.GetTaskByIdAsync(id.Value);
+
             if (realLifeTask == null)
             {
                 return NotFound();
@@ -59,8 +61,11 @@ namespace TaskManager.Controllers
         }
 
         // GET: RealLifeTasks/Create
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
+            var categories = await _categoryRepository.GetAllUserCategoriesAsync();
+            ViewBag.Categories = new SelectList(categories.ToList(), "Id", "Name");
+
             return View();
         }
 
@@ -69,24 +74,29 @@ namespace TaskManager.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name,Description,Category,IsCompleted,CreatedAt,Deadline,CompletedAt")] RealLifeTask realLifeTask)
+        public async Task<IActionResult> Create([Bind("Id,Name,Description,CategoryId,Priority,IsCompleted,Deadline")] RealLifeTask realLifeTask)
         {
             realLifeTask.CreatedAt = DateTime.Now;
-            var userID = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userID = User.GetId();
 
             if (userID == null)
             {
                 return NotFound();
             }
 
-            realLifeTask.UserId = userID;
+            realLifeTask.AppUserId = userID;
+
+            ModelState.Remove("AppUserId");
+            ModelState.Remove("AppUser");
+            ModelState.Remove("Category");
 
             if (ModelState.IsValid)
             {
-                _context.Add(realLifeTask);
-                await _context.SaveChangesAsync();
+                await _realLifeTaskRepository.AddTaskAsync(realLifeTask);
                 return RedirectToAction(nameof(Index));
             }
+            var categories = await _categoryRepository.GetAllUserCategoriesAsync();
+            ViewBag.Categories = new SelectList(categories, "Id", "Name");
             return View(realLifeTask);
         }
 
@@ -97,8 +107,10 @@ namespace TaskManager.Controllers
             {
                 return NotFound();
             }
+            var categories = await _categoryRepository.GetAllUserCategoriesAsync();
+            ViewBag.Categories = new SelectList(categories, "Id", "Name");
 
-            var realLifeTask = await _context.RealLifeTask.FindAsync(id);
+            var realLifeTask = await _realLifeTaskRepository.GetTaskByIdAsync(id.Value);
             if (realLifeTask == null)
             {
                 return NotFound();
@@ -111,49 +123,41 @@ namespace TaskManager.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,UserId,Name,Description,Category,IsCompleted,CreatedAt,Deadline,CompletedAt")] RealLifeTask realLifeTask)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Description,CategoryId,Priority,IsCompleted,CreatedAt,Deadline")] RealLifeTask realLifeTask)
         {
             if (id != realLifeTask.Id)
             {
                 return NotFound();
             }
 
-            var userID = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userID = User.GetId();
 
             if (userID == null)
             {
                 return NotFound();
             }
 
-            realLifeTask.UserId = userID;
+            realLifeTask.AppUserId = userID;
+
+            ModelState.Remove("AppUserId");
+            ModelState.Remove("AppUser");
+            ModelState.Remove("Category");
 
             if (ModelState.IsValid)
             {
-                try
-                {
-                    _context.Update(realLifeTask);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!RealLifeTaskExists(realLifeTask.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
+                await _realLifeTaskRepository.UpdateTaskAsync(realLifeTask);
                 return RedirectToAction(nameof(Index));
             }
+
+            var categories = await _categoryRepository.GetAllUserCategoriesAsync();
+            ViewBag.Categories = new SelectList(categories, "Id", "Name");
             return View(realLifeTask);
         }
 
         // GET: RealLifeTasks/Complete/5
         public async Task<IActionResult> Complete(int id)
         {
-            var realLifeTask = await _context.RealLifeTask.FindAsync(id);
+            var realLifeTask = await _realLifeTaskRepository.GetTaskByIdAsync(id);
             if (realLifeTask == null)
             {
                 return NotFound();
@@ -162,8 +166,7 @@ namespace TaskManager.Controllers
             realLifeTask.IsCompleted = true;
             realLifeTask.CompletedAt = DateTime.Now;
 
-            _context.Update(realLifeTask);
-            await _context.SaveChangesAsync();
+            await _realLifeTaskRepository.UpdateTaskAsync(realLifeTask);
 
             return RedirectToAction(nameof(Index));
         }
@@ -176,8 +179,7 @@ namespace TaskManager.Controllers
                 return NotFound();
             }
 
-            var realLifeTask = await _context.RealLifeTask
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var realLifeTask = await _realLifeTaskRepository.GetTaskByIdAsync(id.Value);
             if (realLifeTask == null)
             {
                 return NotFound();
@@ -191,21 +193,8 @@ namespace TaskManager.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var realLifeTask = await _context.RealLifeTask.FindAsync(id);
-            if (realLifeTask != null)
-            {
-                _context.RealLifeTask.Remove(realLifeTask);
-            }
-
-            await _context.SaveChangesAsync();
+            await _realLifeTaskRepository.DeleteTaskAsync(id);
             return RedirectToAction(nameof(Index));
-        }
-
-
-
-        private bool RealLifeTaskExists(int id)
-        {
-            return _context.RealLifeTask.Any(e => e.Id == id);
         }
     }
 }

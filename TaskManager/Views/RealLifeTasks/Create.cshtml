@@ -21,9 +21,14 @@
                 <span asp-validation-for="Description" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="Category" class="control-label"></label>
-                <select asp-for="Category" class="form-control" asp-items="Html.GetEnumSelectList<TaskManager.Models.Category>()"></select>
-                <span asp-validation-for="Category" class="text-danger"></span>
+                <label asp-for="CategoryId" class="control-label">Category</label>
+                <select asp-for="CategoryId" class="form-control" asp-items="ViewBag.Categories"></select>
+                <span asp-validation-for="CategoryId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Priority" class="control-label"></label>
+                <select asp-for="Priority" class="form-control" asp-items="Html.GetEnumSelectList<TaskManager.Models.Priority>()"></select>
+                <span asp-validation-for="Priority" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="Deadline" class="control-label"></label>
