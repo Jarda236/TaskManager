@@ -30,6 +30,14 @@ namespace TaskManager.Repositories
             return await _context.SaveChangesAsync() == 1;
         }
 
+        public async Task<IEnumerable<RealLifeTask>> GetAllUserCompletedTasksAsync()
+        {
+            return await _context.RealLifeTask
+                .Where(t => t.AppUserId == _userService.GetUserId() && t.IsCompleted)
+                .Include(t => t.Category)
+                .ToListAsync();
+        }
+
         public async Task<IEnumerable<RealLifeTask>> GetAllUserTasksAsync()
         {
             return await _context.RealLifeTask

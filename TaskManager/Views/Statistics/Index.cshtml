@@ -1,0 +1,61 @@
+﻿@model TaskManager.ViewModels.StatisticsViewModel
+
+<h1>Statistics</h1>
+<hr />
+<div class="row">
+    <h4>Average time used to comlete task</h4>
+    <p>
+        Calculation is in percentage of used time from all tasks. It calculates average needed from creation to completion of task.
+    </p>
+
+    <dl class="row">
+        <dt class="col-sm-2">
+            Time needed:
+        </dt>
+        <dd class="col-sm-10">
+            @Model.AverageUsedPercetageOfUsedTimeFromAllTasks.ToString("0.00") %
+        </dd>
+    </dl>
+</div>
+<hr />
+<div class="row">
+    <h4>
+        Averare time needed to complete task by priority
+    </h4>
+    <p>
+        Calculation is in percentage of used time from all tasks. It calculates average needed from creation to completion of task by priority.
+    </p>
+    @foreach (var item in Model.AverageUsedPercetageOfUsedTimeFromAllTasksGroupedByPriority)
+    {
+        <dl class="row">
+            <dt class="col-sm-2">
+                Priority
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => item.Key)
+            </dd>
+            <dt class="col-sm-2">
+                Time needed:
+            </dt>
+            <dd class="col-sm-10">
+                @item.Value.ToString("0.00") %
+            </dd>
+        </dl>
+    }
+</div>
+<hr />
+<div class="row">
+    <h4>
+        Average completed tasks per month
+    </h4>
+    <dl>
+<dt>
+            Average completed tasks per month
+        </dt>
+        <dd>
+            @Model.AverageCompletedTasksPerMonth.ToString("0.00")
+        </dd>
+    </dl>
+
+</div>
+

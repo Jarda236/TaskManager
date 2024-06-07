@@ -30,6 +30,8 @@ namespace TaskManager
             builder.Services.AddScoped<IRealLifeTaskRepository, RealLifeTaskRepository>();
             builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 
+            builder.Services.AddScoped<IStatisticsService, StatisticsService>();
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
