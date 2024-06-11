@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using TaskManager.Data;
 using TaskManager.Extensions;
 using TaskManager.Interfaces.Repositories;
+using TaskManager.Interfaces.Services;
 using TaskManager.Models;
 using TaskManager.ViewModels;
 
@@ -20,30 +21,14 @@ namespace TaskManager.Controllers
     {
         private readonly IRealLifeTaskRepository _realLifeTaskRepository;
         private readonly ICategoryRepository _categoryRepository;
+        private readonly IRealLifeTaskFilterService _realLifeTaskFilterService;
 
-        public RealLifeTasksController(IRealLifeTaskRepository realLifeTaskRepository, ICategoryRepository categoryRepository)
+        public RealLifeTasksController(IRealLifeTaskRepository realLifeTaskRepository, ICategoryRepository categoryRepository, IRealLifeTaskFilterService realLifeTaskFilterService)
         {
             _realLifeTaskRepository = realLifeTaskRepository;
             _categoryRepository = categoryRepository;
+            _realLifeTaskFilterService = realLifeTaskFilterService;
         }
-
-        /*
-        // GET: RealLifeTasks
-        public async Task<IActionResult> Index()
-        {
-            var userID = User.GetId();
-
-            if (userID == null)
-            {
-                return NotFound();
-            }
-
-
-            var tasks = await _realLifeTaskRepository.GetAllUserTasksAsync();
-
-            return View(tasks);
-        }
-        */
 
         // GET: RealLifeTasks
         public async Task<IActionResult> Index(int? categoryId, Priority? priority, bool? isCompleted)
@@ -59,21 +44,7 @@ namespace TaskManager.Controllers
             ViewBag.Categories = categories;
 
             var tasks = await _realLifeTaskRepository.GetAllUserTasksAsync();
-
-            if (categoryId.HasValue)
-            {
-                tasks = tasks.Where(t => t.CategoryId == categoryId.Value).ToList();
-            }
-
-            if (priority.HasValue)
-            {
-                tasks = tasks.Where(t => t.Priority == priority.Value).ToList();
-            }
-
-            if (isCompleted.HasValue)
-            {
-                tasks = tasks.Where(t => t.IsCompleted == isCompleted.Value).ToList();
-            }
+            tasks = _realLifeTaskFilterService.FilterTasks(tasks, categoryId, priority, isCompleted);
 
             var viewModel = new RealLifeTaskFilterViewModel
             {
