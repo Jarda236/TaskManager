@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TaskManager.Models
@@ -16,7 +15,7 @@ namespace TaskManager.Models
         public string Name { get; set; }
 
         public ICollection<RealLifeTask> RealLifeTasks { get; set; } = new List<RealLifeTask>();
-     
+
 
         public override string ToString()
         {

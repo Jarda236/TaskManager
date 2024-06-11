@@ -13,7 +13,7 @@ namespace TaskManager.Services
             }
             if (priority.HasValue)
             {
-                   tasks = tasks.Where(t => t.Priority == priority.Value);
+                tasks = tasks.Where(t => t.Priority == priority.Value);
             }
             if (isCompleted.HasValue)
             {
