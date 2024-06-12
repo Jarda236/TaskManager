@@ -45,6 +45,7 @@ namespace TaskManager.Repositories
         public async Task<CategoryNumOfTasks> GetCategoryWithNumOfTasksAsync(int id)
         {
             return await _context.Category
+                .Where(c => c.AppUserID == _userService.GetUserId())
                 .Where(c => c.Id == id)
                 .Select(c => new CategoryNumOfTasks
                 {

@@ -11,6 +11,8 @@ namespace TaskManager.Controllers
     {
         private readonly ICategoryRepository _categoryRepository;
 
+        private string UserId => User.GetId();
+
         public CategoriesController(ICategoryRepository categoryRepository)
         {
             _categoryRepository = categoryRepository;
@@ -55,7 +57,7 @@ namespace TaskManager.Controllers
             }
 
             var category = await _categoryRepository.GetCategoryByIdAsync(id.Value);
-            if (category == null)
+            if (category == null || category.AppUserID != UserId)
             {
                 return NotFound();
             }
@@ -74,12 +76,10 @@ namespace TaskManager.Controllers
                 return NotFound();
             }
 
-            var userID = User.GetId();
-            if (userID == null)
+            if (category.AppUserID != UserId)
             {
                 return NotFound();
             }
-            category.AppUserID = userID;
 
             if (ModelState.IsValid)
             {

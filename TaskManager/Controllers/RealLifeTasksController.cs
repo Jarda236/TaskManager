@@ -16,6 +16,8 @@ namespace TaskManager.Controllers
         private readonly ICategoryRepository _categoryRepository;
         private readonly IRealLifeTaskFilterService _realLifeTaskFilterService;
 
+        private string UserId => User.GetId();
+
         public RealLifeTasksController(IRealLifeTaskRepository realLifeTaskRepository, ICategoryRepository categoryRepository, IRealLifeTaskFilterService realLifeTaskFilterService)
         {
             _realLifeTaskRepository = realLifeTaskRepository;
@@ -60,7 +62,7 @@ namespace TaskManager.Controllers
 
             var realLifeTask = await _realLifeTaskRepository.GetTaskByIdAsync(id.Value);
 
-            if (realLifeTask == null)
+            if (realLifeTask == null || realLifeTask.AppUserId != UserId)
             {
                 return NotFound();
             }
@@ -122,7 +124,7 @@ namespace TaskManager.Controllers
             }
 
             var realLifeTask = await _realLifeTaskRepository.GetTaskByIdAsync(id.Value);
-            if (realLifeTask == null)
+            if (realLifeTask == null || realLifeTask.AppUserId != UserId)
             {
                 return NotFound();
             }
@@ -157,17 +159,10 @@ namespace TaskManager.Controllers
                 return NotFound();
             }
 
-            var userID = User.GetId();
-
-            if (userID == null)
-            {
-                return NotFound();
-            }
-
             if (ModelState.IsValid)
             {
                 var realLifeTask = await _realLifeTaskRepository.GetTaskByIdAsync(id);
-                if (realLifeTask == null)
+                if (realLifeTask == null || realLifeTask.AppUserId != UserId)
                 {
                     return NotFound();
                 }
@@ -179,7 +174,6 @@ namespace TaskManager.Controllers
                 realLifeTask.Deadline = viewModel.Deadline;
                 realLifeTask.IsCompleted = viewModel.IsCompleted;
                 realLifeTask.CreatedAt = viewModel.CreatedAt;
-                realLifeTask.AppUserId = userID;
 
                 await _realLifeTaskRepository.UpdateTaskAsync(realLifeTask);
                 return RedirectToAction(nameof(Index));
@@ -194,7 +188,7 @@ namespace TaskManager.Controllers
         public async Task<IActionResult> Complete(int id)
         {
             var realLifeTask = await _realLifeTaskRepository.GetTaskByIdAsync(id);
-            if (realLifeTask == null)
+            if (realLifeTask == null || realLifeTask.AppUserId != UserId)
             {
                 return NotFound();
             }
@@ -216,7 +210,7 @@ namespace TaskManager.Controllers
             }
 
             var realLifeTask = await _realLifeTaskRepository.GetTaskByIdAsync(id.Value);
-            if (realLifeTask == null)
+            if (realLifeTask == null || realLifeTask.AppUserId != UserId)
             {
                 return NotFound();
             }
@@ -232,5 +226,6 @@ namespace TaskManager.Controllers
             await _realLifeTaskRepository.DeleteTaskAsync(id);
             return RedirectToAction(nameof(Index));
         }
+
     }
 }
