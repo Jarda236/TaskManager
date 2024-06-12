@@ -82,9 +82,8 @@ namespace TaskManager.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name,Description,CategoryId,Priority,IsCompleted,Deadline")] RealLifeTask realLifeTask)
+        public async Task<IActionResult> Create(RealLifeTaskCreateViewModel viewModel)
         {
-            realLifeTask.CreatedAt = DateTime.Now;
             var userID = User.GetId();
 
             if (userID == null)
@@ -92,20 +91,26 @@ namespace TaskManager.Controllers
                 return NotFound();
             }
 
-            realLifeTask.AppUserId = userID;
-
-            ModelState.Remove("AppUserId");
-            ModelState.Remove("AppUser");
-            ModelState.Remove("Category");
-
             if (ModelState.IsValid)
             {
+
+                var realLifeTask = new RealLifeTask
+                {
+                    Name = viewModel.Name,
+                    Description = viewModel.Description,
+                    CategoryId = viewModel.CategoryId,
+                    Priority = viewModel.Priority,
+                    Deadline = viewModel.Deadline,
+                    CreatedAt = DateTime.Now,
+                    AppUserId = userID
+                };
+
                 await _realLifeTaskRepository.AddTaskAsync(realLifeTask);
                 return RedirectToAction(nameof(Index));
             }
             var categories = await _categoryRepository.GetAllUserCategoriesAsync();
             ViewBag.Categories = new SelectList(categories, "Id", "Name");
-            return View(realLifeTask);
+            return View(viewModel);
         }
 
         // GET: RealLifeTasks/Edit/5
@@ -115,15 +120,29 @@ namespace TaskManager.Controllers
             {
                 return NotFound();
             }
-            var categories = await _categoryRepository.GetAllUserCategoriesAsync();
-            ViewBag.Categories = new SelectList(categories, "Id", "Name");
 
             var realLifeTask = await _realLifeTaskRepository.GetTaskByIdAsync(id.Value);
             if (realLifeTask == null)
             {
                 return NotFound();
             }
-            return View(realLifeTask);
+
+            var categories = await _categoryRepository.GetAllUserCategoriesAsync();
+            ViewBag.Categories = new SelectList(categories, "Id", "Name");
+
+            var viewModel = new RealLifeTaskEditViewModel
+            {
+                Id = realLifeTask.Id,
+                Name = realLifeTask.Name,
+                Description = realLifeTask.Description,
+                CategoryId = realLifeTask.CategoryId,
+                Priority = realLifeTask.Priority,
+                Deadline = realLifeTask.Deadline,
+                IsCompleted = realLifeTask.IsCompleted,
+                CreatedAt = realLifeTask.CreatedAt
+            };
+
+            return View(viewModel);
         }
 
         // POST: RealLifeTasks/Edit/5
@@ -131,9 +150,9 @@ namespace TaskManager.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Description,CategoryId,Priority,IsCompleted,CreatedAt,Deadline")] RealLifeTask realLifeTask)
+        public async Task<IActionResult> Edit(int id, RealLifeTaskEditViewModel viewModel)
         {
-            if (id != realLifeTask.Id)
+            if (id != viewModel.Id)
             {
                 return NotFound();
             }
@@ -145,21 +164,30 @@ namespace TaskManager.Controllers
                 return NotFound();
             }
 
-            realLifeTask.AppUserId = userID;
-
-            ModelState.Remove("AppUserId");
-            ModelState.Remove("AppUser");
-            ModelState.Remove("Category");
-
             if (ModelState.IsValid)
             {
+                var realLifeTask = await _realLifeTaskRepository.GetTaskByIdAsync(id);
+                if (realLifeTask == null)
+                {
+                    return NotFound();
+                }
+
+                realLifeTask.Name = viewModel.Name;
+                realLifeTask.Description = viewModel.Description;
+                realLifeTask.CategoryId = viewModel.CategoryId;
+                realLifeTask.Priority = viewModel.Priority;
+                realLifeTask.Deadline = viewModel.Deadline;
+                realLifeTask.IsCompleted = viewModel.IsCompleted;
+                realLifeTask.CreatedAt = viewModel.CreatedAt;
+                realLifeTask.AppUserId = userID;
+
                 await _realLifeTaskRepository.UpdateTaskAsync(realLifeTask);
                 return RedirectToAction(nameof(Index));
             }
 
             var categories = await _categoryRepository.GetAllUserCategoriesAsync();
             ViewBag.Categories = new SelectList(categories, "Id", "Name");
-            return View(realLifeTask);
+            return View(viewModel);
         }
 
         // GET: RealLifeTasks/Complete/5
