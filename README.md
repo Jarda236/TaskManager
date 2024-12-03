@@ -1,5 +1,5 @@
 ## This project is just simple Task Manager
-It was made using .NET MVC. Added repositorires, services and some viewmodels.
+This project is my learning .NET MVC web application, where I aim to follow conventions, simplicity, and readability. Over time, I plan to implement some interesting business logic related to tasks or any other ideas that come to mind.
 
 ### Functions
 - users using default setup of Identity framework
